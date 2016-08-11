@@ -54,4 +54,5 @@ def load_data_into_tensors():
 time1=time.time()
 load_data_into_tensors()
 time2=time.time()
-print(time2-time1)
+time_load=time2-time1
+print('Time to load data: %f seconds.' %time_load)
