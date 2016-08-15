@@ -13,7 +13,7 @@ def unpickle(file):
         print('no such file')
     return dict
 
-def load_data():
+def load_train_data():
     #loads all of the data/labels into a numpy matrix
     #data from Learning Multiple Layers of Features from Tiny Images, Alex Krizhevsky, 2009.
     train_data=[]
@@ -27,8 +27,8 @@ def load_data():
 
     return train_data,train_labels
 
-def convert_to_rgb(data):
-    data=np.reshape(data,[50000,3,32,32])
+def convert_to_rgb(data,num_examples):
+    data=np.reshape(data,[num_examples,3,32,32])
     data=np.transpose(data,[0,2,3,1])
     return data
 
@@ -42,17 +42,32 @@ def shuffle_data(data,labels):
         shuffled_labels[new_ind]=labels[old_ind]
     return shuffled_data, shuffled_labels
 
-def load_training_data_into_tensors():
-    train_data,train_labels = load_data()
+def load_training_data():
+    train_data,train_labels = load_train_data()
     train_data,train_labels= shuffle_data(train_data,train_labels)
-    train_data=convert_to_rgb(train_data)
+    train_data=convert_to_rgb(train_data,50000)
     train_labels_one_hot=np.zeros((50000,10))
     train_labels_one_hot[np.arange(50000),train_labels]=1
     return train_data,train_labels_one_hot
 
 
+def load_test_data():
+    data_dict=unpickle("./datasets/cifar-10-batches-py/test_batch")
+
+    test_data = data_dict['data']
+    test_data=np.array(test_data)
+    test_data=convert_to_rgb(test_data,10000)
+
+
+    test_labels=data_dict['labels']
+    test_labels=np.array(test_labels)
+    #test_labels_one_hot=np.zeros((len(test_labels),10))
+    #test_labels_one_hot[np.arange(len(test_labels)),test_labels]=1
+    return test_data, test_labels
+
+
 time1=time.time()
-load_training_data_into_tensors()
+load_training_data()
 time2=time.time()
 time_load=time2-time1
 print('Time to load data: %f seconds.' %time_load)
