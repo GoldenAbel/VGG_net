@@ -1,8 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import time
-
-
+#calling load data loads all the training labels and data into separate tensors and shuffles them
 def unpickle(file):
     #imports the pickle file and returns a dictionary from the loaded file
     import cPickle
@@ -29,8 +28,8 @@ def load_data():
     return train_data,train_labels
 
 def convert_to_rgb(data):
-    data=tf.reshape(data,[-1,3,32,32],name='All_input_data')
-    data=tf.transpose(data,[0,2,3,1])
+    data=np.reshape(data,[50000,3,32,32])
+    data=np.transpose(data,[0,2,3,1])
     return data
 
 def shuffle_data(data,labels):
@@ -43,16 +42,17 @@ def shuffle_data(data,labels):
         shuffled_labels[new_ind]=labels[old_ind]
     return shuffled_data, shuffled_labels
 
-def load_data_into_tensors():
+def load_training_data_into_tensors():
     train_data,train_labels = load_data()
     train_data,train_labels= shuffle_data(train_data,train_labels)
     train_data=convert_to_rgb(train_data)
-    train_labels=tf.convert_to_tensor(train_labels)
-    return train_data,train_labels
+    train_labels_one_hot=np.zeros((50000,10))
+    train_labels_one_hot[np.arange(50000),train_labels]=1
+    return train_data,train_labels_one_hot
 
 
 time1=time.time()
-load_data_into_tensors()
+load_training_data_into_tensors()
 time2=time.time()
 time_load=time2-time1
 print('Time to load data: %f seconds.' %time_load)
