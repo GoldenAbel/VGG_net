@@ -29,7 +29,7 @@ def inference_vgg(inputs):
 
     inputs=tf.image.resize_images(inputs,224,224)
     #conv section 1
-    #inputs 224x224 so need to get rid of last layer
+    #inputs batchx224x224x3
     conv1=conv_relu(inputs=inputs,name='conv1',filter_height=3,filter_width=3,channels=3,num_filters=64,stride=1)
     conv2=conv_relu(inputs=conv1,name='conv2',filter_height=3,filter_width=3,channels=64,num_filters=64,stride=1)
 
