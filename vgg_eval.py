@@ -2,7 +2,6 @@ from load_data import load_test_data
 import vgg
 import tensorflow as tf
 import numpy as np
-import os
 
 
 def create_batch(i,inputs,labels):
@@ -30,20 +29,20 @@ def eval():
             if ckpt:
                 saver.restore(sess, ckpt.model_checkpoint_path)
                 global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-                print(ckpt)
+
                 global_step=int(global_step)
             curr_acc=0.0
+            mean_acc=0.0
             for step in range((len(test_labels)/100)):
                 test_batch_data,test_batch_labels=create_batch(step,test_data,test_labels)
                 feed_dict={
                     test_inputs_placeholder:test_batch_data,
                     test_labels_placeholder:test_batch_labels
                 }
-                last_acc=curr_acc
                 curr_correct=sess.run([test_correct_op],feed_dict=feed_dict)
 
                 curr_acc=np.sum(curr_correct)/100.0
-                mean_acc=((step)*last_acc+curr_acc)/(step+1)
+                mean_acc=((step)*mean_acc+curr_acc)/(step+1)
                 print(mean_acc)
             print('Total mean accuracy is %f' %mean_acc)
 eval()
