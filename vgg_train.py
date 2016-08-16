@@ -14,8 +14,8 @@ def create_placeholders(batch,pixel_width,pixel_height,channels,num_classes):
 
 def create_batch(i,inputs,labels):
     batch=100
-    batch_inputs = np.array(inputs[((i%500)*batch):((i%500)*batch+batch),:,:,:],dtype='float')
-    batch_labels = np.array(labels[((i%500)*batch):((i%500)*batch+batch),:],dtype='float')
+    batch_inputs = np.array(inputs[((i%500)*batch):((i%1000)*batch+batch),:,:,:],dtype='float')
+    batch_labels = np.array(labels[((i%500)*batch):((i%1000)*batch+batch),:],dtype='float')
     return batch_inputs, batch_labels
 
 
@@ -47,6 +47,7 @@ def train(num_iters):
 
             batch_inputs,batch_labels=create_placeholders(100,32,32,3,10)
 
+
             logits=vgg.inference_vgg(batch_inputs)
 
             loss=vgg.loss(logits,batch_labels)
@@ -62,10 +63,11 @@ def train(num_iters):
                 print('No checkpoint found')
                 global_step=0
 
-        #summary_op=tf.merge_all_summaries() causes problems with placeholders
-        #summary_writer=tf.train.SummaryWriter('log',sess.graph)
-
-            sess.run(tf.initialize_all_variables())
+            #summary_op=tf.merge_all_summaries() #causes problems with placeholders
+            #summary_writer=tf.train.SummaryWriter('log',sess.graph)
+            #if (global_step==0):
+            if (global_step==0):
+                sess.run(tf.initialize_all_variables())
 
 
             for iter in range(num_iters):
@@ -84,13 +86,13 @@ def train(num_iters):
                 end_time=time.time()
                 total_time=(end_time-start_time)
 
-                if (global_step%50)==0:
+                if (global_step%10)==0:
 
                     print('Iteration: %d, Loss: %.2f, Iteration time: %.1f' %(global_step,total_loss,total_time))
 
-            #if (iter%50==0):
-            #    summary_str=sess.run(summary_op)
-            #    summary_writer.add_summary(summary_str,iter)
+                #if (iter%50==0):
+                #    summary_str=sess.run(summary_op)
+                #    summary_writer.add_summary(summary_str,iter)
 
                 if (global_step%10==0):
                     checkpoint_path = os.path.join('./checkpoints', 'model.ckpt')
