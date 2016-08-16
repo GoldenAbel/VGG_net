@@ -28,10 +28,7 @@ def eval():
             ckpt=tf.train.get_checkpoint_state('./checkpoints')
             if ckpt:
                 saver.restore(sess, ckpt.model_checkpoint_path)
-                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
 
-                global_step=int(global_step)
-            curr_acc=0.0
             mean_acc=0.0
             for step in range((len(test_labels)/100)):
                 test_batch_data,test_batch_labels=create_batch(step,test_data,test_labels)
