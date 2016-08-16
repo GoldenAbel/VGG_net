@@ -26,8 +26,10 @@ def fully_connected_relu(inputs,name,out_size):
 
 def inference_vgg(inputs):
     #building type D from paper
+
+    inputs=tf.image.resize_images(inputs,224,224)
     #conv section 1
-    #inputs 32x32 so need to get rid of last layer
+    #inputs 224x224 so need to get rid of last layer
     conv1=conv_relu(inputs=inputs,name='conv1',filter_height=3,filter_width=3,channels=3,num_filters=64,stride=1)
     conv2=conv_relu(inputs=conv1,name='conv2',filter_height=3,filter_width=3,channels=64,num_filters=64,stride=1)
 
@@ -58,15 +60,15 @@ def inference_vgg(inputs):
     pool4=max_pool(inputs=conv9,name='pool4',pool_size=2,stride=2)
 
     #conv section 5
-    #conv11=conv_relu(inputs=pool4,name='conv11',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
-    #conv12=conv_relu(inputs=conv11,name='conv12',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
-    #conv13=conv_relu(inputs=conv12,name='conv13',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
+    conv11=conv_relu(inputs=pool4,name='conv11',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
+    conv12=conv_relu(inputs=conv11,name='conv12',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
+    conv13=conv_relu(inputs=conv12,name='conv13',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
 
     #pool 5
-    #pool5=max_pool(inputs=conv13,name='pool5',pool_size=2,stride=2)
-    shape=pool4.get_shape()
+    pool5=max_pool(inputs=conv13,name='pool5',pool_size=2,stride=2)
+    shape=pool5.get_shape()
     flatten_shape=shape[1].value*shape[2].value*shape[3].value
-    fc_input=tf.reshape(pool4,[-1,flatten_shape])
+    fc_input=tf.reshape(pool5,[-1,flatten_shape])
 
     #fc
     fc1=fully_connected_relu(inputs=fc_input,name='fc1',out_size=4096)
