@@ -26,8 +26,12 @@ def fully_connected_relu(inputs,name,out_size):
     return out
 
 
-def inference_vgg(inputs):
+def inference_vgg(inputs,train=True):
     #building type D from paper
+    if train==True:
+        dprobs=0.5
+    else:
+        dprobs=1
 
     inputs=tf.image.resize_images(inputs,224,224)
     #conv section 1
@@ -74,8 +78,10 @@ def inference_vgg(inputs):
 
     #fc
     fc1=fully_connected_relu(inputs=fc_input,name='fc1',out_size=4096)
-    fc2=fully_connected_relu(inputs=fc1,name='fc2',out_size=4096)
-    logits=fully_connected_relu(inputs=fc2,name='fc3',out_size=10)
+    fc1_dropout=tf.nn.dropout(fc1,dprobs,name='fc1_dropout')
+    fc2=fully_connected_relu(inputs=fc1_dropout,name='fc2',out_size=4096)
+    fc2_dropout=tf.nn.dropout(fc2,dprobs,name='fc2_dropout')
+    logits=fully_connected_relu(inputs=fc2_dropout,name='fc3',out_size=10)
 
     return logits
 

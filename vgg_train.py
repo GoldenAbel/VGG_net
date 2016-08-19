@@ -14,8 +14,8 @@ def create_placeholders(batch,pixel_width,pixel_height,channels,num_classes):
 
 def create_batch(i,inputs,labels):
     batch=100
-    batch_inputs = np.array(inputs[((i%500)*batch):((i%1000)*batch+batch),:,:,:],dtype='float')
-    batch_labels = np.array(labels[((i%500)*batch):((i%1000)*batch+batch),:],dtype='float')
+    batch_inputs = np.array(inputs[((i%500)*batch):((i%500)*batch+batch),:,:,:],dtype='float')
+    batch_labels = np.array(labels[((i%500)*batch):((i%500)*batch+batch),:],dtype='float')
     return batch_inputs, batch_labels
 
 
@@ -86,7 +86,7 @@ def train(num_iters):
                 end_time=time.time()
                 total_time=(end_time-start_time)
 
-                if (global_step%10)==0:
+                if (global_step%5)==0:
 
                     print('Iteration: %d, Loss: %.2f, Iteration time: %.1f' %(global_step,total_loss,total_time))
 
@@ -94,7 +94,7 @@ def train(num_iters):
                 #    summary_str=sess.run(summary_op)
                 #    summary_writer.add_summary(summary_str,iter)
 
-                if (global_step%10==0):
+                if (global_step%1000==0):
                     checkpoint_path = os.path.join('./checkpoints', 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=global_step)
 

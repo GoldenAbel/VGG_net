@@ -19,7 +19,7 @@ def eval():
 
         test_inputs_placeholder=tf.placeholder(tf.float32,shape=[100,32,32,3],name='test_inputs')
         test_labels_placeholder=tf.placeholder(tf.int32,shape=[100],name='test_labels')
-        logits=vgg.inference_vgg(test_inputs_placeholder)
+        logits=vgg.inference_vgg(test_inputs_placeholder,train=False)
         test_correct_op = tf.nn.in_top_k(logits,test_labels_placeholder,1)
         saver=tf.train.Saver()
 
