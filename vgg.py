@@ -1,14 +1,13 @@
 import tensorflow as tf
+import numpy as np
 
 def conv_relu(inputs,name,filter_height,filter_width,channels,num_filters,stride):
     with tf.variable_scope(name) as scope:
-        filter=tf.get_variable(name='W_conv',shape=[filter_height,filter_width,channels,num_filters],dtype=tf.float32,initializer=tf.contrib.layers.xavier_initializer_conv2d())
+        filter=tf.get_variable(name='W_conv',shape=[filter_height,filter_width,channels,num_filters],dtype=tf.float32,initializer=tf.contrib.layers.xavier_initializer_conv2d(uniform=False))
         conv=tf.nn.conv2d(inputs,filter,[1,stride,stride,1],padding='SAME')
-        bias=tf.get_variable(name='b_conv',shape=[num_filters])
+        bias=tf.get_variable(name='b_conv',shape=[num_filters],initializer=tf.constant_initializer(0.0))
         z=conv+bias
         out = tf.nn.relu(z,name='activation')
-        filter_hist=tf.histogram_summary(name,filter)
-        name_hist=tf.histogram_summary(name,filter)
         return out
 
 def max_pool(inputs,name,pool_size,stride):
@@ -17,10 +16,13 @@ def max_pool(inputs,name,pool_size,stride):
     return out
 
 def fully_connected_relu(inputs,name,out_size):
-
+    shape=inputs.get_shape()
+    D=shape[1].value
     with tf.variable_scope(name) as scope:
-        out=tf.contrib.layers.fully_connected(inputs,out_size,biases_initializer=tf.zeros_initializer)
-
+        weight=tf.get_variable(name='W_affine',shape=[D,out_size],initializer=tf.contrib.layers.xavier_initializer())
+        bias=tf.get_variable(name='b_affine',shape=[out_size],initializer=tf.constant_initializer(0.0))
+        z=tf.matmul(inputs,weight)+bias
+        out=tf.nn.relu(z,name='activation_affine')
     return out
 
 
@@ -54,10 +56,10 @@ def inference_vgg(inputs):
     #conv section 4
     conv8=conv_relu(inputs=pool3,name='conv8',filter_height=3,filter_width=3,channels=256,num_filters=512,stride=1)
     conv9=conv_relu(inputs=conv8,name='conv9',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
-    conv10=conv_relu(inputs=conv9,name='conv10',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
+    conv10=conv_relu(inputs=conv9,name='conv_10',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
 
     #pool 4
-    pool4=max_pool(inputs=conv9,name='pool4',pool_size=2,stride=2)
+    pool4=max_pool(inputs=conv10,name='pool4',pool_size=2,stride=2)
 
     #conv section 5
     conv11=conv_relu(inputs=pool4,name='conv11',filter_height=3,filter_width=3,channels=512,num_filters=512,stride=1)
@@ -84,11 +86,42 @@ def loss(logits,labels):
 
     return loss
 
+def loss_readdata(logits,labels):
+    labels=tf.cast(labels,tf.int64)
+    cross_ent_mean=tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits,labels,name='trainloss'))
+    tf.add_to_collection('losses',cross_ent_mean)
+    return tf.add_n(tf.get_collection('losses'),name='total_loss')
+
 def training(loss, learning_rate):
   tf.scalar_summary(loss.op.name, loss)
   # Create the gradient descent optimizer with the given learning rate.
-  optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+  optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
   # Create a variable to track the global step.
-  global_step = tf.Variable(0, name='global_step', trainable=False)
-  train_op = optimizer.minimize(loss, global_step=global_step)
+  train_op = optimizer.minimize(loss)
   return train_op
+
+def training_readfromfile(loss, learning_rate,global_step):
+  loss_op=tf.scalar_summary(loss.op.name,loss)
+
+  learning_rate=tf.train.exponential_decay(learning_rate, global_step, 100, 0.98, staircase=False, name=None)
+  tf.scalar_summary('learning_rate', learning_rate)
+  # Create the gradient descent optimizer with the given learning rate.
+  with tf.control_dependencies([loss_op]):
+      optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+      grads=optimizer.compute_gradients(loss)
+  apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
+
+  for var in tf.trainable_variables():
+    tf.histogram_summary(var.op.name, var)
+
+  # Add histograms for gradients.
+  for grad, var in grads:
+    if grad is not None:
+        tf.histogram_summary(var.op.name + '/gradients', grad)
+
+
+  # Create a variable to track the global step.
+  with tf.control_dependencies([apply_gradient_op]):
+        train_op = tf.no_op(name='train')
+  return train_op
+
